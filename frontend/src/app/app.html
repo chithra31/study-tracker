@@ -1,0 +1,19 @@
+@if (auth.user(); as user) {
+  <header class="topbar">
+    <a class="brand" routerLink="/goals">Study Progress Tracker</a>
+    <nav>
+      <a routerLink="/goals" routerLinkActive="active">Goals</a>
+      @if (auth.isMentor()) {
+        <a routerLink="/config" routerLinkActive="active">Configuration</a>
+      }
+    </nav>
+    <div class="who">
+      <span>{{ user.name }}</span>
+      <span class="role role-{{ user.role }}">{{ user.role }}</span>
+      <button class="btn btn-ghost" (click)="auth.logout()">Sign out</button>
+    </div>
+  </header>
+}
+<main class="page">
+  <router-outlet />
+</main>

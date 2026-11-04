@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  LEARNER
+  MENTOR
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  name         String
+  passwordHash String
+  role         Role           @default(LEARNER)
+  goals        Goal[]
+  sessions     StudySession[]
+}
+
+model Goal {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String?
+  ownerId     Int
+  owner       User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  topics      Topic[]
+}
+
+model Topic {
+  id            Int                 @id @default(autoincrement())
+  goalId        Int
+  title         String
+  completed     Boolean             @default(false)
+  completedAt   DateTime?
+  goal          Goal                @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  // topics this topic requires
+  prerequisites TopicPrerequisite[] @relation("TopicRequires")
+  // topics that require this topic
+  dependents    TopicPrerequisite[] @relation("TopicRequiredBy")
+  sessions      StudySession[]
+}
+
+model TopicPrerequisite {
+  topicId        Int
+  prerequisiteId Int
+  topic          Topic @relation("TopicRequires", fields: [topicId], references: [id], onDelete: Cascade)
+  prerequisite   Topic @relation("TopicRequiredBy", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+
+  @@id([topicId, prerequisiteId])
+}
+
+model StudySession {
+  id      Int      @id @default(autoincrement())
+  topicId Int
+  userId  Int
+  date    DateTime @db.Date
+  minutes Int
+  note    String   @default("")
+  topic   Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Admin-editable business rules, read on every request (no code change needed to alter behaviour)
+model Config {
+  key         String @id
+  value       Int
+  description String
+}
